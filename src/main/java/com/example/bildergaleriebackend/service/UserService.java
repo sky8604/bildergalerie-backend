@@ -21,7 +21,7 @@ public class UserService {
     @Inject
     private Pbkdf2PasswordHash passwordHash;
 
-    public User register(String email, String userName, String passwordNotHashed) {
+    public User register(String email, String userName, String passwordNotHashed) throws EmailAlreadyExistsException {
         User userWithSameEmail = em.find(User.class, email);
 
         if (userWithSameEmail != null) {
@@ -53,10 +53,4 @@ public class UserService {
             }
         }
     }
-
-    public User getUserByEmail(String email) {
-        return em.find(User.class, email);
-    }
-
 }
-

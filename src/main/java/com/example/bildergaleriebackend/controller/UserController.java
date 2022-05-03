@@ -1,6 +1,7 @@
 package com.example.bildergaleriebackend.controller;
 
 import com.example.bildergaleriebackend.entity.User;
+import com.example.bildergaleriebackend.exception.EmailAlreadyExistsException;
 import com.example.bildergaleriebackend.exception.WrongEmailException;
 import com.example.bildergaleriebackend.exception.WrongPasswordException;
 import com.example.bildergaleriebackend.model.*;
@@ -32,10 +33,17 @@ public class UserController {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response register(@Valid User user) {
-		user = userService.register(user.getEmail(), user.getUserName(), user.getPassword());
+		try {
+			user = userService.register(user.getEmail(), user.getUserName(), user.getPassword());
+		} catch (EmailAlreadyExistsException ex) {
+			return Response
+					.status(Response.Status.BAD_REQUEST)
+					.entity(ex)
+					.build();
+		}
 
 		return Response
-				.status(200)
+				.status(Response.Status.OK)
 				.entity(user)
 				.build();
 	}
@@ -45,27 +53,26 @@ public class UserController {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response login(@Valid AuthRequestDTO userEmailPassword) {
-		ResponseDTO responseDTO = new ResponseDTO();
+		loginDTO loginDTO = new loginDTO();
 		try {
 			User user = userService.login(userEmailPassword.getEmail(), userEmailPassword.getPassword());
-			responseDTO.setToken(jwtService.generateJwt(user.getEmail(), user.getUserName()));
-		} catch (WrongEmailException e) {
-			ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO("wrong_email");
+			loginDTO.setUserName(user.getUserName());
+			loginDTO.setToken(jwtService.generateJwt(user.getEmail(), user.getUserName()));
+		} catch (WrongEmailException ex) {
 			return Response
 					.status(Response.Status.UNAUTHORIZED)
-					.entity(errorResponseDTO)
+					.entity(ex)
 					.build();
-		} catch (WrongPasswordException e) {
-			ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO("wrong_password");
+		} catch (WrongPasswordException ex) {
 			return Response
 					.status(Response.Status.UNAUTHORIZED)
-					.entity(errorResponseDTO)
+					.entity(ex)
 					.build();
 		}
 
 		return Response
 				.status(Response.Status.OK)
-				.entity(responseDTO)
+				.entity(loginDTO)
 				.build();
 	}
 }
