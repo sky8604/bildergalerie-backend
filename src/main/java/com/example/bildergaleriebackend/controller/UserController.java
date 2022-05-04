@@ -57,6 +57,7 @@ public class UserController {
 		try {
 			User user = userService.login(userEmailPassword.getEmail(), userEmailPassword.getPassword());
 			loginDTO.setUserName(user.getUserName());
+			loginDTO.setEmail(user.getEmail());
 			loginDTO.setToken(jwtService.generateJwt(user.getEmail(), user.getUserName()));
 		} catch (WrongEmailException ex) {
 			return Response
